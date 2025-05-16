@@ -1,0 +1,59 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - staging
+      - main
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Deploy to Staging
+        run: echo "Deploying to Staging environment..."
+        # Replace this with your actual deployment script for staging
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: deploy-staging
+
+    steps:
+      - name: Wait for Manual Approval
+        uses: hmarr/auto-approve-action@v2
+        with:
+          message: "Approve deployment to Production"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Deploy to Production
+        run: echo "Deploying to Production environment..."
+        # Replace this with your actual deployment script for production
